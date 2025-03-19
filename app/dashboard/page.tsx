@@ -20,7 +20,12 @@ interface Stats {
 }
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession();
+  const { data: session, status } = useSession({
+    required: true,
+    onUnauthenticated() {
+      router.push('/login');
+    },
+  });
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState<Stats>({
@@ -33,16 +38,24 @@ export default function DashboardPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    }
-  }, [status, router]);
+    // Debug log voor sessie informatie
+    console.log('Session in dashboard:', session);
+    console.log('Auth status:', status);
 
-  useEffect(() => {
-    if (session?.user?.role === 'admin') {
-      fetchUsers();
+    if (status === 'loading') return;
+
+    if (!session?.user) {
+      router.push('/login');
+      return;
     }
-  }, [session]);
+
+    if (session.user.role !== 'admin') {
+      router.push('/');
+      return;
+    }
+
+    fetchUsers();
+  }, [session, status, router]);
 
   const fetchUsers = async () => {
     try {

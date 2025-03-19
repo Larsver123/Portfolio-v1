@@ -7,6 +7,9 @@ export default withAuth(
     const isAdminRoute = req.nextUrl.pathname.startsWith('/admin');
     const isDashboardRoute = req.nextUrl.pathname.startsWith('/dashboard');
 
+    // Debug log voor token informatie
+    console.log('Token in middleware:', token);
+
     // Als de gebruiker niet is ingelogd, redirect naar login
     if (!token) {
       return NextResponse.redirect(new URL('/login', req.url));
@@ -18,19 +21,23 @@ export default withAuth(
     }
 
     // Als de gebruiker geen admin is en probeert het dashboard te bereiken
-    if (token.role !== 'admin' && (isDashboardRoute || isAdminRoute)) {
-      return NextResponse.redirect(new URL('/', req.url));
+    if (isDashboardRoute || isAdminRoute) {
+      if (token.role !== 'admin') {
+        return NextResponse.redirect(new URL('/', req.url));
+      }
     }
 
     return NextResponse.next();
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token
+      authorized: ({ token }) => {
+        // Debug log voor authorized callback
+        console.log('Token in authorized callback:', token);
+        return !!token;
+      }
     },
-    pages: {
-      signIn: '/login',
-    },
+    secret: process.env.NEXTAUTH_SECRET,
   }
 );
 
