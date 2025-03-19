@@ -20,13 +20,16 @@ interface Stats {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const { data: session, status } = useSession({
     required: true,
     onUnauthenticated() {
-      router.push('/login');
+      // Redirect to login with the current URL as callback
+      const currentPath = window.location.pathname;
+      router.push(`/login?callbackUrl=${encodeURIComponent(currentPath)}`);
     },
   });
-  const router = useRouter();
+
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState<Stats>({
     totalUsers: 0,
@@ -38,18 +41,9 @@ export default function DashboardPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    // Debug log voor sessie informatie
-    console.log('Session in dashboard:', session);
-    console.log('Auth status:', status);
-
     if (status === 'loading') return;
 
-    if (!session?.user) {
-      router.push('/login');
-      return;
-    }
-
-    if (session.user.role !== 'admin') {
+    if (session?.user?.role !== 'admin') {
       router.push('/');
       return;
     }
