@@ -1,17 +1,17 @@
 const { PrismaClient } = require('@prisma/client');
-const { hash } = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
 
-async function main() {
+async function createAdmin() {
   try {
-    const password = await hash('admin123', 12);
-
+    const hashedPassword = await bcrypt.hash('admin123', 10);
+    
     const admin = await prisma.user.create({
       data: {
-        name: 'Admin',
         email: 'admin@example.com',
-        password,
+        name: 'Admin',
+        password: hashedPassword,
         role: 'admin',
         isApproved: true,
       },
@@ -19,10 +19,10 @@ async function main() {
 
     console.log('Admin user created:', admin);
   } catch (error) {
-    console.error('Error creating admin user:', error);
+    console.error('Error creating admin:', error);
   } finally {
     await prisma.$disconnect();
   }
 }
 
-main(); 
+createAdmin(); 
