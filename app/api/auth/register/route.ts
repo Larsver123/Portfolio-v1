@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/app/lib/prisma";
+import { sendNewUserNotification } from "@/app/lib/email";
 
 export async function POST(request: Request) {
   try {
@@ -36,6 +37,9 @@ export async function POST(request: Request) {
         isApproved: isFirstUser, // First user (admin) is automatically approved
       }
     });
+
+    // Send email notification
+    await sendNewUserNotification(email, name);
 
     return NextResponse.json({
       user: {
