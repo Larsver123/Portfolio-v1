@@ -7,13 +7,18 @@ export default withAuth(
     const isAdminRoute = req.nextUrl.pathname.startsWith('/admin');
     const isDashboardRoute = req.nextUrl.pathname.startsWith('/dashboard');
 
-    // If user is not approved and not admin, redirect to pending page
-    if (token && !token.isApproved && token.role !== 'admin' && (isDashboardRoute || isAdminRoute)) {
+    // Als de gebruiker niet is ingelogd, redirect naar login
+    if (!token) {
+      return NextResponse.redirect(new URL('/login', req.url));
+    }
+
+    // Als de gebruiker niet is goedgekeurd en geen admin is, redirect naar pending
+    if (!token.isApproved && token.role !== 'admin') {
       return NextResponse.redirect(new URL('/pending', req.url));
     }
 
-    // If user is not admin, prevent access to admin routes
-    if (token && token.role !== 'admin' && isAdminRoute) {
+    // Als de gebruiker geen admin is en probeert het dashboard te bereiken
+    if (token.role !== 'admin' && (isDashboardRoute || isAdminRoute)) {
       return NextResponse.redirect(new URL('/', req.url));
     }
 
@@ -33,6 +38,6 @@ export const config = {
   matcher: [
     '/dashboard/:path*',
     '/admin/:path*',
-    '/api/admin/:path*',
+    '/api/users/:path*',
   ]
 }; 
